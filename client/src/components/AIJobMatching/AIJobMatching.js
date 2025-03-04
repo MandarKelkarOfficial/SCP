@@ -39,3 +39,5 @@ const AIJobMatching = () => {
     </div>
   );
 };
+
+export default AIJobMatching;
