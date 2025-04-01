@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import coursesData from '../components/Assets/data/courses.json'; // Import your JSON file
+import coursesData from '../Assets/data/courses.json'; // Import your JSON file
 
 const CourseRecommender = () => {
   const [searchSubject, setSearchSubject] = useState('');

@@ -166,51 +166,106 @@ const transporter = nodemailer.createTransport({
 });
 
 // Email sending route (after user registration)
+
 app.post("/api/send-email", async (req, res) => {
   const { email } = req.body;
 
-  // Check if OTP already exists for the email
-  if (otpStorage[email]) {
-    return res.status(200).json({
-      success: true,
-      message: "OTP already sent. Please check your email.",
-    });
-  }
-
   // Generate a random 6-digit OTP
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-  const mailOptions = {
-    from: "sdbcontactme@gmail.com", // Sender address
-    to: email, // List of receivers
-    subject: "OTP Verification for TalentSync Sol", // Subject line
-    text: `Your OTP for verification is: ${otp}`, // Plain text body
-  };
+  const otpExpiry = Date.now() + 10 * 60 * 1000; // OTP valid for 10 minutes
 
   try {
+    // Read the HTML template file
+    const templatePath = path.join(__dirname, 'templates', 'otp-template.html');
+    let htmlContent = fs.readFileSync(templatePath, 'utf8');
+    
+    // Replace placeholders in the template
+    htmlContent = htmlContent
+      .replace(/{{otp}}/g, otp)
+      .replace(/{{email}}/g, email);
+
+    const mailOptions = {
+      from: '"TalentSync Sol" <sdbcontactme@gmail.com>', // Sender name and address
+      to: email,
+      subject: "Your Verification Code for TalentSync Sol", // Subject line
+      text: `Your OTP for verification is: ${otp}\nThis code will expire in 10 minutes.`, // Plain text fallback
+      html: htmlContent, // HTML body
+    };
+
+    // Check if OTP already exists for the email
+    if (otpStorage[email] && otpStorage[email].expiry > Date.now()) {
+      return res.status(200).json({
+        success: true,
+        message: "OTP already sent. Please check your email.",
+      });
+    }
+
     await transporter.sendMail(mailOptions);
-    // Save OTP to temporary storage
-    otpStorage[email] = otp;
-    res.status(200).json({ success: true, message: "OTP sent successfully", otp });
+    
+    // Save OTP to storage with expiry time
+    otpStorage[email] = {
+      otp,
+      expiry: otpExpiry
+    };
+
+    // Schedule cleanup of expired OTP (optional)
+    setTimeout(() => {
+      if (otpStorage[email] && otpStorage[email].expiry <= Date.now()) {
+        delete otpStorage[email];
+      }
+    }, 10 * 60 * 1000);
+
+    res.status(200).json({ 
+      success: true, 
+      message: "OTP sent successfully",
+      // Don't send OTP in production response - only for development
+      otp: process.env.NODE_ENV === 'development' ? otp : undefined
+    });
+
   } catch (error) {
     console.error("Error sending email:", error);
-    res.status(500).json({ success: false, message: "Error sending email" });
+    res.status(500).json({ 
+      success: false, 
+      message: "Error sending email",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
 // OTP Verification route
-app.post("/api/verify-otp", (req, res) => {
-  const { email, enteredOtp } = req.body; // Get email and entered OTP from the request
 
-  if (otpStorage[email] && otpStorage[email] === enteredOtp) {
-    delete otpStorage[email]; // Clear OTP after verification
-    res.status(200).json({ success: true, message: "OTP verified successfully!" });
-  } else {
-    res.status(400).json({ success: false, message: "Invalid OTP, please try again." });
-  }
-});
-
-
+app.post("/api/verify-otp", async (req, res) => {
+    const { email, enteredOtp } = req.body;
+    
+    if (!otpStorage[email]) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "No OTP requested for this email" 
+      });
+    }
+    
+    if (otpStorage[email].expiry < Date.now()) {
+      delete otpStorage[email];
+      return res.status(400).json({ 
+        success: false, 
+        message: "OTP has expired. Please request a new one." 
+      });
+    }
+    
+    if (otpStorage[email].otp !== enteredOtp) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid OTP" 
+      });
+    }
+    
+    // OTP is valid
+    delete otpStorage[email];
+    res.status(200).json({ 
+      success: true, 
+      message: "OTP verified successfully" 
+    });
+  });
 
 // server.js or routes/user.js
 app.post('/api/check-duplicate', async (req, res) => {
@@ -258,34 +313,7 @@ const ugSchema = new mongoose.Schema({
 const UG = mongoose.model('UG', ugSchema);
 
 
-// app.post('/api/ug', async (req, res) => {
-//   const { username, srn, prn, universityurl, university, course, startDate, graduateDate, cgp, state, district } = req.body;
-  
-//   try {
-//     // Create a new UG document
-//     const newUG = new UG({
-//       username,
-//       srn,
-//       prn,
-//       universityurl,
-//       university,
-//       course,
-//       startDate: startDate ? new Date(startDate) : null,
-//       graduateDate: graduateDate ? new Date(graduateDate) : null,
-//       cgp,
-//       state,
-//       district,
-//       });
 
-//     // Save to the database
-//     await newUG.save();
-
-//     res.status(201).json({ success: true, message: "UG form data saved successfully!" });
-//   } catch (error) {
-//     console.error('Error saving UG form data:', error);
-//     res.status(500).json({ success: false, message: 'Server error' });
-//   }
-// });
 
 
 app.post('/api/ug', upload.single('transcriptFile'), async (req, res) => {
