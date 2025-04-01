@@ -33,11 +33,22 @@ app.use(bodyParser.json());
 // Serve uploaded images
 app.use('/uploads', express.static(path.join(__dirname, './public/uploads')));
 
-// MongoDB connection
-mongoose.connect("mongodb://localhost:27017/sihDB", {
+// Add at the very top
+require('dotenv').config();
+
+// Replace mongoose.connect section
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+  useUnifiedTopology: true
+})
+.then(() => console.log('Connected to MongoDB Atlas'))
+.catch(err => console.error('MongoDB connection error:', err));
+
+// MongoDB connection
+// mongoose.connect("mongodb://localhost:27017/sihDB", {
+//   useNewUrlParser: true,
+//   useUnifiedTopology: true,
+// });
 
 // User Schema
 const userSchema = new mongoose.Schema({

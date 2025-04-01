@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faBriefcase, faFileAlt, faBook, faGamepad, faCog, faExternalLink } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faBriefcase, faFileAlt, faBook, faGamepad, faExternalLink } from '@fortawesome/free-solid-svg-icons';
 
 const Sidebar = () => {
   return (

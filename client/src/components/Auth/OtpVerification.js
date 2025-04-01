@@ -232,7 +232,7 @@
 
 
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -251,11 +251,14 @@ function OtpVerification() {
   const email = location.state?.email;
   const registrationData = JSON.parse(sessionStorage.getItem("userData"));
 
+  const otpSent = useRef(false); 
+
   useEffect(() => {
-    if (email) {
+    if (email && !otpSent.current) {
+      otpSent.current = true; // Mark OTP as sent
       sendOtp();
     }
-  }, []); // Ensure OTP is sent only once when the component mounts
+  }, [email]); // Ensure OTP is sent only once when the component mounts
 
   const saveRegistrationData = async () => {
     try {
