@@ -614,6 +614,18 @@ app.get('/api/visibility/:username', async (req, res) => {
 
 // Start the server
 const PORT = process.env.PORT || 5000; // Allow port to be set by environment variable
+
+
+// Add this at the end before listening
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, 'client/build')));
+    
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+    });
+  }
+
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
