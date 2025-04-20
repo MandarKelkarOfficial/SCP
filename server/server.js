@@ -61,6 +61,10 @@ mongoose
 //   useUnifiedTopology: true,
 // });
 
+app.get("/", (req, res) => {
+  res.send("API is running...");
+});
+
 
 // Register route
 app.post("/api/register", async (req, res) => {
