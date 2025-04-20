@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faBriefcase, faFileAlt, faBook, faGamepad, faExternalLink } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faBriefcase, faFileAlt, faBook, faGamepad, faExternalLink, faSuitcase } from '@fortawesome/free-solid-svg-icons';
 
 const Sidebar = () => {
   return (
@@ -40,6 +40,7 @@ const Sidebar = () => {
         >
           <FontAwesomeIcon icon={faBook} className="mr-3" /> Courses
         </NavLink>
+        
         <NavLink
           to="/dashboard/playfield"
           className={({ isActive }) =>
@@ -48,6 +49,16 @@ const Sidebar = () => {
         >
           <FontAwesomeIcon icon={faGamepad} className="mr-3" /> Playfield
         </NavLink>
+
+        <NavLink
+          to="/dashboard/jobs"
+          className={({ isActive }) =>
+            `block py-3 px-6 hover:bg-purple-700 ${isActive ? 'bg-purple-700' : ''}`
+          }
+        >
+          <FontAwesomeIcon icon={faSuitcase} className="mr-3" /> Jobs
+        </NavLink>
+
         <NavLink
           to="/"
           className={({ isActive }) =>

@@ -1,0 +1,20 @@
+# Node
+node_modules
+npm-debug.log
+**/node_modules
+
+# React
+client/node_modules
+client/build
+client/.env*           # your React env
+
+# Server
+server/node_modules
+server/.env*
+
+# Logs
+*.log
+
+# Git
+.git
+.gitignore

@@ -9,6 +9,7 @@ import Playfield from './components/Pages/Playfield';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import OtpVerification from './components/Auth/OtpVerification';
+import Jobs from './components/Pages/Jobs';
 
 const App = () => {
   return (
@@ -28,6 +29,7 @@ const App = () => {
           <Route path="generate-resume" element={<GenerateResume />} />
           <Route path="courses" element={<CourseRecommender />} />
           <Route path="playfield" element={<Playfield />} />
+          <Route path="jobs" element={<Jobs/>} />
         </Route>
       </Routes>
     </Router>
