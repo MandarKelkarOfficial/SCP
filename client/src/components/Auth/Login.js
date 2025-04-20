@@ -14,7 +14,7 @@ function Login() {
     e.preventDefault();
 
     // const response = await fetch("http://localhost:5000/api/login", {
-    console.log(backend);
+    console.log("The backed is hosted in railway");
     const response = await fetch(`${backend}/api/login`, {
       method: "POST",
       headers: {
