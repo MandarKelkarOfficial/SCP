@@ -252,7 +252,7 @@ function OtpVerification() {
   const registrationData = JSON.parse(sessionStorage.getItem("userData"));
 
   const otpSent = useRef(false); 
-  const backend = process.env.BACKEND || "http://localhost:5000";
+  const backend = process.env.BACKEND;
 
 
   useEffect(() => {

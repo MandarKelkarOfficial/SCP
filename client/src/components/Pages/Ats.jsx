@@ -14,7 +14,7 @@ const ATS = () => {
   const [error, setError] = useState("");
 
   // Use your .env variable for backend URL
-  const backend = process.env.BACKEND || "http://localhost:5000";
+  const backend = process.env.BACKEND;
 
   const jobLevels = [
     "Fresher",

@@ -8,7 +8,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const backend = process.env.BACKEND || "http://localhost:5000";
+  const backend = process.env.BACKEND ;
 
   const handleLogin = async (e) => {
     e.preventDefault();
