@@ -8,11 +8,13 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const backend = process.env.BACKEND || "http://localhost:5000";
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    const response = await fetch("http://localhost:5000/api/login", {
+    // const response = await fetch("http://localhost:5000/api/login", {
+    const response = await fetch(`${backend}/api/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -7,6 +7,8 @@ import { EnvelopeIcon, LockClosedIcon, UserCircleIcon, PhoneIcon, CalendarIcon, 
 
 function RegisterForm() {
   const navigate = useNavigate();
+  const backend = process.env.BACKEND || "http://localhost:5000";
+
   const [formData, setFormData] = useState({
     username: '',
     email: '',

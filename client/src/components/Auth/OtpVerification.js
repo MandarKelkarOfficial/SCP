@@ -252,6 +252,8 @@ function OtpVerification() {
   const registrationData = JSON.parse(sessionStorage.getItem("userData"));
 
   const otpSent = useRef(false); 
+  const backend = process.env.BACKEND || "http://localhost:5000";
+
 
   useEffect(() => {
     if (email && !otpSent.current) {
@@ -262,7 +264,7 @@ function OtpVerification() {
 
   const saveRegistrationData = async () => {
     try {
-      const response = await axios.post("http://localhost:5000/api/register", {
+      const response = await axios.post(`${backend}/api/register`, {
         ...registrationData,
         email,
       });
