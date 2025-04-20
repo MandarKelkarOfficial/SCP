@@ -7,7 +7,7 @@ import remarkGfm from "remark-gfm";
 const ATS = () => {
   const [uploadOption, setUploadOption] = useState("upload");
   const [selectedFile, setSelectedFile] = useState(null);
-  const [jobTitle, setJobTitle] = useState("");
+  const [jobTitle, setJobTitle] = useState("Full Stack Developer");
   const [score, setScore] = useState(null);
   const [suggestions, setSuggestions] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -37,6 +37,8 @@ const ATS = () => {
     ) {
       setSelectedFile(file);
       setError("");
+      console.log("Received jobTitle:", jobTitle);
+      console.log("Received file:", file);
     } else {
       setError("Please upload a PDF or Word document");
     }
@@ -63,6 +65,15 @@ const ATS = () => {
       e.preventDefault();
       setIsLoading(true);
       setError("");
+
+      if (!selectedFile || !jobTitle.trim()) {
+        setError("Please select a file and a job title");
+        setIsLoading(false);
+        return;
+      }
+
+      console.log("Sending jobTitle:", jobTitle);
+      console.log("Sending file:", selectedFile?.name);
 
       try {
         const formData = new FormData();
@@ -173,9 +184,31 @@ const ATS = () => {
               <h4 className="text-xl font-semibold text-purple-800 mb-3">
                 Improvement Suggestions:
               </h4>
-              <div className="text-purple-700 whitespace-pre-wrap">
+              <div className="text-purple-700 whitespace-pre-wrap text-wrap">
                 {/* <div className="prose max-w-none text-purple-700"> */}
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    p: ({ node, ...props }) => (
+                      <p
+                        className="break-words whitespace-pre-wrap"
+                        {...props}
+                      />
+                    ),
+                    code: ({ node, inline, ...props }) =>
+                      inline ? (
+                        <code
+                          className="break-words bg-gray-100 px-1 rounded"
+                          {...props}
+                        />
+                      ) : (
+                        <pre
+                          className="overflow-x-auto break-words"
+                          {...props}
+                        />
+                      ),
+                  }}
+                >
                   {suggestions}
                 </ReactMarkdown>
               </div>
