@@ -8,12 +8,13 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const backend = process.env.BACKEND ;
+  const backend = process.env.REACT_APP_BACKEND;
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     // const response = await fetch("http://localhost:5000/api/login", {
+    console.log(backend);
     const response = await fetch(`${backend}/api/login`, {
       method: "POST",
       headers: {

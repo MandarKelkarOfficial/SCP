@@ -252,7 +252,7 @@ function OtpVerification() {
   const registrationData = JSON.parse(sessionStorage.getItem("userData"));
 
   const otpSent = useRef(false); 
-  const backend = process.env.BACKEND;
+  const backend = process.env.REACT_APP_BACKEND;
 
 
   useEffect(() => {

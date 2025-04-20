@@ -14,7 +14,7 @@ const ATS = () => {
   const [error, setError] = useState("");
 
   // Use your .env variable for backend URL
-  const backend = process.env.BACKEND;
+  const backend = process.env.REACT_APP_BACKEND;
 
   const jobLevels = [
     "Fresher",
