@@ -637,6 +637,7 @@ app.post("/api/calculate-ats", upload.single("resume"), async (req, res) => {
         ],
       }
     );
+    console.log(text);
     suggestions =
       geminiRes.data.candidates?.[0]?.content?.parts?.[0]?.text ||
       "No suggestions generated";

@@ -193,17 +193,45 @@ const GenerateResume = () => {
     }));
   };
 
-  const downloadPdf = () => {
+  // const downloadPdf = () => {
+  //   if (!resumeRef.current) return;
+  //   html2canvas(resumeRef.current).then((canvas) => {
+  //     const img = canvas.toDataURL("image/png");
+  //     const pdf = new jsPDF("p", "pt", "a4");
+  //     const width = pdf.internal.pageSize.getWidth();
+  //     const height = (canvas.height * width) / canvas.width;
+  //     pdf.addImage(img, "PNG", 0, 0, width, height);
+  //     pdf.save("resume.pdf");
+  //   });
+  // };
+
+    const downloadPdf = () => {
     if (!resumeRef.current) return;
-    html2canvas(resumeRef.current).then((canvas) => {
-      const img = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "pt", "a4");
-      const width = pdf.internal.pageSize.getWidth();
-      const height = (canvas.height * width) / canvas.width;
-      pdf.addImage(img, "PNG", 0, 0, width, height);
-      pdf.save("resume.pdf");
+
+    html2canvas(resumeRef.current, {
+      // Remove any unsupported oklch() colors before rendering
+      onclone: (clonedDoc) => {
+        clonedDoc.querySelectorAll('*').forEach(node => {
+          ['color', 'backgroundColor', 'borderColor'].forEach(prop => {
+            const v = node.style[prop];
+            if (v && v.includes('oklch')) {
+              node.style[prop] = ''; 
+            }
+          });
+        });
+      }
+    }).then((canvas) => {
+      const img = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'pt', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = (canvas.height * pageWidth) / canvas.width;
+      pdf.addImage(img, 'PNG', 0, 0, pageWidth, pageHeight);
+      pdf.save('resume.pdf');
+    }).catch(err => {
+      console.error('Error generating PDF:', err);
     });
   };
+
 
   // Add input sections for new categories in the form
   return (

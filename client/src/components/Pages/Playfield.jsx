@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 
 const careerPaths = {
-  engineering: { name: 'Engineering', score: 0 },
-  science: { name: 'Pure Sciences', score: 0 },
-  arts: { name: 'Liberal Arts', score: 0 },
-  commerce: { name: 'Commerce', score: 0 },
-  healthcare: { name: 'Healthcare', score: 0 }
+  engineering: { name: 'Computer Engineering', score: 0 },
+  science: { name: 'Computer Sciences', score: 0 },
+  arts: { name: 'AI', score: 0 },
+  commerce: { name: 'Data Science', score: 0 },
+  healthcare: { name: 'ML', score: 0 }
 };
 
 const tests = [
@@ -369,7 +369,7 @@ const Playfield = () => {
         )}
 
         <div className="text-center mt-6 text-gray-600 text-sm">
-          Career guidance test developed by career experts
+          Career guidance test developed by G8
         </div>
       </div>
     </div>

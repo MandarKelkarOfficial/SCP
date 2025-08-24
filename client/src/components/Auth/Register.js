@@ -1,34 +1,41 @@
 /* eslint-disable no-unused-vars */
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import bcrypt from 'bcryptjs';
-import { EnvelopeIcon, LockClosedIcon, UserCircleIcon, PhoneIcon, CalendarIcon, MapPinIcon } from '@heroicons/react/24/outline';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import bcrypt from "bcryptjs";
+import {
+  EnvelopeIcon,
+  LockClosedIcon,
+  UserCircleIcon,
+  PhoneIcon,
+  CalendarIcon,
+  MapPinIcon,
+} from "@heroicons/react/24/outline";
 
 function RegisterForm() {
   const navigate = useNavigate();
   const backend = process.env.BACKEND || "http://localhost:5000";
 
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    firstName: '',
-    lastName: '',
-    dob: '',
-    address: '',
-    phoneNumber: '',
-    about: '',
-    postalCode: ''
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    firstName: "",
+    lastName: "",
+    dob: "",
+    address: "",
+    phoneNumber: "",
+    about: "",
+    postalCode: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   // Helper: Compute age from DOB
   const computeAge = (dobString) => {
     const dob = new Date(dobString);
-    if (isNaN(dob.getTime())) return '';
+    if (isNaN(dob.getTime())) return "";
     const diffMs = Date.now() - dob.getTime();
     const ageDate = new Date(diffMs);
     return Math.abs(ageDate.getUTCFullYear() - 1970);
@@ -36,15 +43,15 @@ function RegisterForm() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     // Basic validation: Check if passwords match and dob is valid
     if (formData.password !== formData.confirmPassword) {
@@ -55,11 +62,11 @@ function RegisterForm() {
     }
 
     setIsLoading(true);
-    
+
     try {
       // Hash password (or do this on the server)
       // const hashedPassword = await bcrypt.hash(formData.password, 10);
-      
+
       const calculatedAge = computeAge(formData.dob);
       const registrationData = {
         username: formData.username,
@@ -73,19 +80,16 @@ function RegisterForm() {
         phoneNumber: formData.phoneNumber,
         about: formData.about,
         postalCode: formData.postalCode,
-
- 
       };
 
       // Save to session storage for OTP verification
-      sessionStorage.setItem('userData', JSON.stringify(registrationData));
-      
+      sessionStorage.setItem("userData", JSON.stringify(registrationData));
+
       // Proceed to OTP verification (backend must handle sending OTP)
-      navigate('/otp-verification', { state: { email: formData.email } });
-      
+      navigate("/otp-verification", { state: { email: formData.email } });
     } catch (error) {
-      console.error('Registration error:', error);
-      setError(error.response?.data?.message || 'Registration failed');
+      console.error("Registration error:", error);
+      setError(error.response?.data?.message || "Registration failed");
     } finally {
       setIsLoading(false);
     }
@@ -107,10 +111,15 @@ function RegisterForm() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form
+            onSubmit={handleSubmit}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          >
             {/* Username */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-purple-800">Username</label>
+              <label className="text-sm font-medium text-purple-800">
+                Username
+              </label>
               <div className="relative">
                 <UserCircleIcon className="h-5 w-5 absolute left-3 top-3 text-purple-400" />
                 <input
@@ -127,7 +136,9 @@ function RegisterForm() {
 
             {/* Email */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-purple-800">Email</label>
+              <label className="text-sm font-medium text-purple-800">
+                Email
+              </label>
               <div className="relative">
                 <EnvelopeIcon className="h-5 w-5 absolute left-3 top-3 text-purple-400" />
                 <input
@@ -144,7 +155,9 @@ function RegisterForm() {
 
             {/* Password */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-purple-800">Password</label>
+              <label className="text-sm font-medium text-purple-800">
+                Password
+              </label>
               <div className="relative">
                 <LockClosedIcon className="h-5 w-5 absolute left-3 top-3 text-purple-400" />
                 <input
@@ -161,7 +174,9 @@ function RegisterForm() {
 
             {/* Confirm Password */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-purple-800">Confirm Password</label>
+              <label className="text-sm font-medium text-purple-800">
+                Confirm Password
+              </label>
               <div className="relative">
                 <LockClosedIcon className="h-5 w-5 absolute left-3 top-3 text-purple-400" />
                 <input
@@ -178,7 +193,9 @@ function RegisterForm() {
 
             {/* First Name */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-purple-800">First Name</label>
+              <label className="text-sm font-medium text-purple-800">
+                First Name
+              </label>
               <input
                 type="text"
                 name="firstName"
@@ -192,7 +209,9 @@ function RegisterForm() {
 
             {/* Last Name */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-purple-800">Last Name</label>
+              <label className="text-sm font-medium text-purple-800">
+                Last Name
+              </label>
               <input
                 type="text"
                 name="lastName"
@@ -206,7 +225,9 @@ function RegisterForm() {
 
             {/* Phone Number */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-purple-800">Phone Number</label>
+              <label className="text-sm font-medium text-purple-800">
+                Phone Number
+              </label>
               <div className="relative">
                 <PhoneIcon className="h-5 w-5 absolute left-3 top-3 text-purple-400" />
                 <input
@@ -214,7 +235,11 @@ function RegisterForm() {
                   name="phoneNumber"
                   onChange={handleChange}
                   value={formData.phoneNumber}
-                  placeholder="+91 123 456 7890"
+                  placeholder="1234567890"
+                  pattern="\d{10}"
+                  maxLength={10}
+                  inputMode="numeric"
+                  title="Please enter phone number"
                   className="w-full pl-10 pr-4 py-3 rounded-lg border-2 border-purple-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all"
                   required
                 />
@@ -223,7 +248,9 @@ function RegisterForm() {
 
             {/* Date of Birth */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-purple-800">Date of Birth</label>
+              <label className="text-sm font-medium text-purple-800">
+                Date of Birth
+              </label>
               <div className="relative">
                 <CalendarIcon className="h-5 w-5 absolute left-3 top-3 text-purple-400" />
                 <input
@@ -244,7 +271,9 @@ function RegisterForm() {
 
             {/* Address */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-purple-800">Address</label>
+              <label className="text-sm font-medium text-purple-800">
+                Address
+              </label>
               <div className="relative">
                 <MapPinIcon className="h-5 w-5 absolute left-3 top-3 text-purple-400" />
                 <input
@@ -261,7 +290,9 @@ function RegisterForm() {
 
             {/* Postal Code */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-purple-800">Postal Code</label>
+              <label className="text-sm font-medium text-purple-800">
+                Postal Code
+              </label>
               <input
                 type="text"
                 name="postalCode"
@@ -273,14 +304,17 @@ function RegisterForm() {
               />
             </div>
 
-
             {/* Submit Button */}
             <div className="md:col-span-2">
               <button
                 type="submit"
                 disabled={isLoading}
                 className={`w-full py-3 px-6 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-all 
-                  ${isLoading ? 'opacity-75 cursor-not-allowed' : 'hover:shadow-lg'}`}
+                  ${
+                    isLoading
+                      ? "opacity-75 cursor-not-allowed"
+                      : "hover:shadow-lg"
+                  }`}
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center space-x-2">
@@ -288,15 +322,18 @@ function RegisterForm() {
                     <span>Creating Account...</span>
                   </div>
                 ) : (
-                  'Register Now'
+                  "Register Now"
                 )}
               </button>
             </div>
           </form>
 
           <p className="text-center text-gray-600">
-            Already have an account?{' '}
-            <a href="/" className="text-purple-600 hover:text-purple-800 font-semibold">
+            Already have an account?{" "}
+            <a
+              href="/"
+              className="text-purple-600 hover:text-purple-800 font-semibold"
+            >
               Login here
             </a>
           </p>
