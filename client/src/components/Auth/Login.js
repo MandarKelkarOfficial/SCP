@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFacebookF, faTwitter, faGoogle, faGithub } from '@fortawesome/free-brands-svg-icons';
+import {  faGoogle, faGithub } from '@fortawesome/free-brands-svg-icons';
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -97,12 +97,7 @@ function Login() {
           <div className="text-center">
             <p className="text-gray-600 mb-2">or sign up with:</p>
             <div className="flex justify-center space-x-4">
-              <button className="text-blue-600 hover:text-blue-800">
-                <FontAwesomeIcon icon={faFacebookF} size="lg" />
-              </button>
-              <button className="text-blue-400 hover:text-blue-600">
-                <FontAwesomeIcon icon={faTwitter} size="lg" />
-              </button>
+
               <button className="text-red-600 hover:text-red-800">
                 <FontAwesomeIcon icon={faGoogle} size="lg" />
               </button>

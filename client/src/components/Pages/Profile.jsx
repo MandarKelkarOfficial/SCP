@@ -4,14 +4,14 @@ import Img from '../Assets/img/initial.jpeg';
 const CareerPathGraph = ({ data }) => {
   const [hoveredItem, setHoveredItem] = useState(null);
   const graphHeight = 200;
-  const graphWidth = 500; // Fixed width for better line calculation
+  const graphWidth = 500;
   const margin = { top: 20, right: 30, bottom: 40, left: 40 };
 
   const getStatusColor = (status) => {
     switch(status) {
-      case 'best': return '#9333ea';
-      case 'good': return '#fb923c';
-      case 'neutral': return '#4ade80';
+      case 'best': return '#8b5cf6';
+      case 'good': return '#3b82f6';
+      case 'neutral': return '#10b981';
       case 'bad': return '#ef4444';
       default: return '#9ca3af';
     }
@@ -24,8 +24,13 @@ const CareerPathGraph = ({ data }) => {
   };
 
   return (
-    <div className="mt-4 p-6 bg-white rounded-lg shadow-md w-full max-w-3xl">
-      <h3 className="text-xl font-semibold text-purple-800 mb-4">Career Path Analysis</h3>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-lg font-semibold text-gray-800">Career Path Analysis</h3>
+        <button className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+          View Details
+        </button>
+      </div>
       <div className="relative" style={{ width: '100%', height: graphHeight }}>
         <svg width="100%" height={graphHeight} viewBox={`0 0 ${graphWidth} ${graphHeight}`}>
           {/* Y-axis */}
@@ -56,7 +61,7 @@ const CareerPathGraph = ({ data }) => {
               return `${pos.x},${pos.y}`;
             }).join(' L ')}`}
             fill="none"
-            stroke="#c084fc"
+            stroke="#8b5cf6"
             strokeWidth="2"
             strokeLinejoin="round"
           />
@@ -102,7 +107,7 @@ const CareerPathGraph = ({ data }) => {
         {/* Tooltip */}
         {hoveredItem && (
           <div
-            className="absolute bg-gray-800 text-white px-3 py-2 rounded-lg text-sm"
+            className="absolute bg-gray-800 text-white px-3 py-2 rounded-lg text-sm shadow-lg z-10"
             style={{
               left: `${calculatePosition(data.findIndex(item => item.id === hoveredItem.id), hoveredItem.score).x * 100 / graphWidth}%`,
               top: `${calculatePosition(0, hoveredItem.score).y - 30}px`,
@@ -118,6 +123,38 @@ const CareerPathGraph = ({ data }) => {
     </div>
   );
 };
+
+const StatsCard = ({ title, value, change, icon }) => (
+  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+    <div className="flex justify-between items-start">
+      <div>
+        <p className="text-sm text-gray-500 mb-1">{title}</p>
+        <h3 className="text-2xl font-bold text-gray-800">{value}</h3>
+        <p className={`text-xs mt-1 ${change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+          {change >= 0 ? '↑' : '↓'} {Math.abs(change)}% from last month
+        </p>
+      </div>
+      <div className="bg-indigo-100 p-3 rounded-lg">
+        {icon}
+      </div>
+    </div>
+  </div>
+);
+
+const SkillProgress = ({ name, level }) => (
+  <div className="mb-4">
+    <div className="flex justify-between items-center mb-1">
+      <span className="text-sm font-medium text-gray-700">{name}</span>
+      <span className="text-sm font-medium text-gray-500">{level}%</span>
+    </div>
+    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+      <div 
+        className="h-full bg-gradient-to-r from-blue-500 to-purple-600" 
+        style={{ width: `${level}%` }}
+      ></div>
+    </div>
+  </div>
+);
 
 const Profile = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -138,30 +175,191 @@ const Profile = () => {
     setIsFullScreen(!isFullScreen);
   };
 
+  // Icons for stats cards (using simple emojis for demonstration)
+  const stats = [
+    { title: "Projects Completed", value: "42", change: 12, icon: "📊" },
+    { title: "Skills Mastered", value: "18", change: 5, icon: "🚀" },
+    { title: "Satisfaction Rate", value: "98%", change: 2, icon: "⭐" },
+  ];
+
+  const skills = [
+    { name: "React.js", level: 90 },
+    { name: "Node.js", level: 85 },
+    { name: "UI/UX Design", level: 75 },
+    { name: "Blockchain", level: 82 },
+  ];
+
   return (
-    <div className="flex flex-col items-center min-h-screen bg-gray-100 p-4">
-      {/* Profile Card */}
-      <div className="relative bg-white shadow-lg rounded-lg p-8 w-full max-w-2xl mb-8 hover:shadow-2xl transition-all">
-        <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 w-32 h-32 rounded-full border-4 border-purple-600 p-1 bg-white shadow-md">
-          <img
-            src={Img}
-            alt="User"
-            className="w-full h-full rounded-full cursor-pointer object-cover"
-            onClick={toggleFullScreen}
-          />
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600">Welcome back, Maddy! Here's your career overview.</p>
         </div>
 
-        <div className="mt-16 text-center">
-          <h2 className="text-2xl font-bold text-purple-800">Maddy K</h2>
-          <p className="text-gray-600 text-lg">Software Engineer | Blockchain Developer</p>
-          <p className="text-gray-500 mt-3">
-            Passionate about full-stack development and AI-driven solutions.
-          </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          {stats.map((stat, index) => (
+            <StatsCard
+              key={index}
+              title={stat.title}
+              value={stat.value}
+              change={stat.change}
+              icon={stat.icon}
+            />
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Profile Card */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-600 to-purple-700 h-24 relative">
+                <div className="absolute -bottom-14 left-1/2 transform -translate-x-1/2 w-28 h-28 rounded-full border-4 border-white p-1 bg-white shadow-lg">
+                  <img
+                    src={Img}
+                    alt="User"
+                    className="w-full h-full rounded-full cursor-pointer object-cover"
+                    onClick={toggleFullScreen}
+                  />
+                </div>
+              </div>
+              <div className="pt-16 pb-6 px-6 text-center">
+                <h2 className="text-xl font-bold text-gray-800">Maddy K</h2>
+                <p className="text-gray-600 text-sm">Software Engineer | Blockchain Developer</p>
+                <p className="text-gray-500 text-sm mt-3">
+                  Passionate about full-stack development and AI-driven solutions.
+                </p>
+                
+                <div className="mt-6 flex justify-center space-x-3">
+                  <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                    Message
+                  </button>
+                  <button className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                    Connect
+                  </button>
+                </div>
+              </div>
+              
+              <div className="border-t border-gray-200 px-6 py-4">
+                <div className="flex justify-between text-center">
+                  <div>
+                    <p className="text-gray-800 font-semibold">86</p>
+                    <p className="text-xs text-gray-500">Connections</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-800 font-semibold">24</p>
+                    <p className="text-xs text-gray-500">Projects</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-800 font-semibold">3.8</p>
+                    <p className="text-xs text-gray-500">Years Exp</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Skills Card */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Skills & Expertise</h3>
+              {skills.map((skill, index) => (
+                <SkillProgress key={index} name={skill.name} level={skill.level} />
+              ))}
+              <button className="mt-2 text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+                Show all skills →
+              </button>
+            </div>
+          </div>
+          
+          {/* Main Content Area */}
+          <div className="lg:col-span-2">
+            <CareerPathGraph data={careerData} />
+            
+            {/* Recent Activity Card */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-semibold text-gray-800">Recent Activity</h3>
+                <button className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+                  View All
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-start">
+                  <div className="bg-blue-100 p-2 rounded-lg mr-4">
+                    <span className="text-blue-600">📝</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">Completed AI Engineer course</p>
+                    <p className="text-xs text-gray-500">2 hours ago</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
+                  <div className="bg-purple-100 p-2 rounded-lg mr-4">
+                    <span className="text-purple-600">🏆</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">Earned Blockchain Developer badge</p>
+                    <p className="text-xs text-gray-500">1 day ago</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
+                  <div className="bg-green-100 p-2 rounded-lg mr-4">
+                    <span className="text-green-600">🔗</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">Connected with Sarah Johnson</p>
+                    <p className="text-xs text-gray-500">2 days ago</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Goals Card */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Career Goals</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-indigo-50 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="bg-white p-1 rounded-md mr-3">
+                      <div className="w-6 h-6 rounded border border-indigo-300 flex items-center justify-center">
+                        <div className="w-3 h-3 rounded-full bg-indigo-600"></div>
+                      </div>
+                    </div>
+                    <span className="text-sm font-medium">Senior Developer Role</span>
+                  </div>
+                  <span className="text-xs px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full">Q2 2023</span>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="bg-white p-1 rounded-md mr-3">
+                      <div className="w-6 h-6 rounded border border-blue-300 flex items-center justify-center">
+                        <div className="w-3 h-3 rounded-full bg-blue-600"></div>
+                      </div>
+                    </div>
+                    <span className="text-sm font-medium">Learn Cloud Architecture</span>
+                  </div>
+                  <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">Ongoing</span>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="bg-white p-1 rounded-md mr-3">
+                      <div className="w-6 h-6 rounded border border-purple-300 flex items-center justify-center">
+                        <div className="w-3 h-3 rounded-full bg-purple-600"></div>
+                      </div>
+                    </div>
+                    <span className="text-sm font-medium">Publish Technical Blog</span>
+                  </div>
+                  <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded-full">Q3 2023</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Graph Card - Separate from Profile Card */}
-      <CareerPathGraph data={careerData} />
 
       {/* Fullscreen Image */}
       {isFullScreen && (
@@ -172,7 +370,7 @@ const Profile = () => {
           <img
             src={Img}
             alt="User"
-            className="w-[300px] md:w-[350px] lg:w-[400px] h-[300px] md:h-[350px] lg:h-[400px] border-4 border-purple-600 object-cover rounded-xl"
+            className="w-[300px] md:w-[350px] lg:w-[400px] h-[300px] md:h-[350px] lg:h-[400px] border-4 border-indigo-600 object-cover rounded-xl"
           />
         </div>
       )}
