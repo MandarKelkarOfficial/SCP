@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
+// Define careerPaths and tests data structures
 const careerPaths = {
   engineering: { name: 'Computer Engineering', score: 0 },
   science: { name: 'Computer Sciences', score: 0 },
@@ -266,6 +267,36 @@ const Playfield = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [scores, setScores] = useState({ ...careerPaths });
   const [completed, setCompleted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes per test
+  const [testStarted, setTestStarted] = useState(false);
+  const [testResults, setTestResults] = useState([]);
+
+  // Timer effect
+  useEffect(() => {
+    if (!testStarted || completed) return;
+
+    if (timeLeft === 0) {
+      // Time's up for this test, move to next
+      if (currentTest + 1 < tests.length) {
+        handleNextTest();
+      } else {
+        setCompleted(true);
+      }
+      return;
+    }
+
+    const timerId = setTimeout(() => {
+      setTimeLeft(timeLeft - 1);
+    }, 1000);
+
+    return () => clearTimeout(timerId);
+  }, [timeLeft, testStarted, completed, currentTest]);
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
 
   const handleAnswer = (selectedPaths) => {
     const newScores = { ...scores };
@@ -277,11 +308,28 @@ const Playfield = () => {
     if (currentQuestion + 1 < tests[currentTest].questions.length) {
       setCurrentQuestion(prev => prev + 1);
     } else if (currentTest + 1 < tests.length) {
-      setCurrentTest(prev => prev + 1);
-      setCurrentQuestion(0);
+      handleNextTest();
     } else {
       setCompleted(true);
     }
+  };
+
+  const handleNextTest = () => {
+    // Save current test results
+    const result = {
+      testName: tests[currentTest].name,
+      scores: { ...scores }
+    };
+    setTestResults([...testResults, result]);
+    
+    // Reset for next test
+    setCurrentTest(prev => prev + 1);
+    setCurrentQuestion(0);
+    setTimeLeft(300); // Reset timer to 5 minutes
+  };
+
+  const startTest = () => {
+    setTestStarted(true);
   };
 
   const calculateResults = () => {
@@ -297,23 +345,108 @@ const Playfield = () => {
     setCurrentQuestion(0);
     setScores({ ...careerPaths });
     setCompleted(false);
+    setTimeLeft(300);
+    setTestStarted(false);
+    setTestResults([]);
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-2xl mx-auto">
-        <h2 className="text-3xl font-bold text-purple-800 mb-8 text-center">
-          Career Aptitude Test
-        </h2>
+  if (!testStarted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-8 px-4">
+        <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-blue-800 mb-4">Career Aptitude Assessment</h1>
+            <p className="text-blue-600 mb-6">
+              Discover which tech career path best matches your skills and interests
+            </p>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-blue-50 p-6 rounded-lg border border-blue-100">
+              <div className="flex items-center mb-4">
+                <div className="bg-blue-100 p-3 rounded-lg mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-blue-800">Time Limit</h3>
+                  <p className="text-blue-600 text-sm">5 minutes per test section</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-purple-50 p-6 rounded-lg border border-purple-100">
+              <div className="flex items-center mb-4">
+                <div className="bg-purple-100 p-3 rounded-lg mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-purple-800">5 Test Sections</h3>
+                  <p className="text-purple-600 text-sm">25 questions total</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-blue-50 rounded-lg p-6 mb-8">
+            <h3 className="text-lg font-semibold text-blue-800 mb-4">Test Sections</h3>
+            <ol className="list-decimal list-inside space-y-2">
+              {tests.map((test, index) => (
+                <li key={index} className="text-blue-700">
+                  {test.name}
+                  <span className="text-blue-500 text-sm ml-2">(5 questions)</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <button
+            onClick={startTest}
+            className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors duration-200 font-medium flex items-center justify-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+            </svg>
+            Start Assessment
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-8 px-4">
+      <div className="max-w-2xl mx-auto">
         {!completed ? (
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+              <div className="mb-4 sm:mb-0">
+                <h2 className="text-xl font-bold text-blue-800">Career Aptitude Test</h2>
+                <p className="text-purple-600 text-sm">
+                  Section {currentTest + 1} of {tests.length}: {tests[currentTest].name}
+                </p>
+              </div>
+              <div className="bg-purple-100 text-purple-800 px-4 py-2 rounded-lg font-medium">
+                Time: {formatTime(timeLeft)}
+              </div>
+            </div>
+
+            <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
+              <div
+                className="bg-purple-600 h-2 rounded-full"
+                style={{ width: `${((currentQuestion + 1) / tests[currentTest].questions.length) * 100}%` }}
+              />
+            </div>
+
             <div className="flex justify-between mb-6">
               <span className="text-purple-700 font-medium">
-                Test {currentTest + 1} of {tests.length}
+                Question {currentQuestion + 1} of {tests[currentTest].questions.length}
               </span>
-              <span className="text-gray-600">
-                Question {currentQuestion + 1} of 5
+              <span className="text-gray-600 text-sm">
+                Section Progress: {currentQuestion + 1}/{tests[currentTest].questions.length}
               </span>
             </div>
 
@@ -335,42 +468,59 @@ const Playfield = () => {
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h3 className="text-2xl font-bold text-purple-800 mb-6 text-center">
-              Your Career Analysis
-            </h3>
-
-            <div className="space-y-4 mb-8">
-              {calculateResults().sort((a, b) => b.percentage - a.percentage).map((result, index) => (
-                <div key={index} className={`p-4 rounded-lg ${index === 0 ? 
-                  'bg-purple-100 border-2 border-purple-300' : 'bg-gray-50'}`}>
-                  <div className="flex justify-between mb-2">
-                    <span className="font-medium text-gray-700">{result.name}</span>
-                    <span className="text-purple-700 font-semibold">{result.percentage}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-purple-600 rounded-full h-2"
-                      style={{ width: `${result.percentage}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="text-center mb-8">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-green-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 className="text-2xl font-bold text-blue-800 mb-2">
+                Assessment Complete!
+              </h3>
+              <p className="text-blue-600">
+                Your career aptitude results are ready
+              </p>
             </div>
 
-            <button
-              onClick={restartTest}
-              className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white 
-                rounded-lg transition-colors duration-200 font-medium"
-            >
-              Take Test Again
-            </button>
+            <div className="bg-blue-50 rounded-lg p-6 mb-8">
+              <h4 className="text-lg font-semibold text-blue-800 mb-4">Your Career Matches</h4>
+              <div className="space-y-4">
+                {calculateResults().sort((a, b) => b.percentage - a.percentage).map((result, index) => (
+                  <div key={index} className={`p-4 rounded-lg ${index === 0 ? 
+                    'bg-purple-100 border-2 border-purple-300' : 'bg-white border border-blue-100'}`}>
+                    <div className="flex justify-between mb-2">
+                      <span className="font-medium text-gray-700">{result.name}</span>
+                      <span className="text-purple-700 font-semibold">{result.percentage}% match</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-purple-600 rounded-full h-2"
+                        style={{ width: `${result.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={restartTest}
+                className="flex-1 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors duration-200 font-medium"
+              >
+                Retake Assessment
+              </button>
+              <button className="flex-1 py-3 border border-purple-600 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors duration-200 font-medium">
+                Save Results
+              </button>
+            </div>
           </div>
         )}
 
-        <div className="text-center mt-6 text-gray-600 text-sm">
-          Career guidance test developed by G8
-        </div>
+        {!completed && (
+          <div className="text-center mt-6 text-gray-600 text-sm">
+            Complete all sections to see your full career analysis
+          </div>
+        )}
       </div>
     </div>
   );
