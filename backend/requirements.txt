@@ -1,0 +1,12 @@
+Flask==2.3.2
+pymongo==4.4.0
+celery==5.3.1
+redis==4.5.5
+pytesseract==0.3.11
+opencv-python-headless==4.8.0.78
+pdf2image==1.16.3
+python-magic==0.4.27
+rapidfuzz==2.16.2
+Pillow==10.0.1
+gunicorn==20.1.0
+python-dotenv==1.1.0
