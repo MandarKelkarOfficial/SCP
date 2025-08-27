@@ -147,10 +147,92 @@ const GenerateResume = () => {
     projects: [{ name: "", link: "", description: "", tools: "" }],
     technologies: { languages: "", tools: "" },
   });
+  
+  const [errors, setErrors] = useState({});
   const [showResume, setShowResume] = useState(false);
   const [activeTab, setActiveTab] = useState("personal");
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const resumeRef = useRef();
+
+  // Validation rules
+  const validateField = (section, field, value, index = null) => {
+    let error = "";
+    
+    // Required field validation
+    const requiredFields = {
+      personalInfo: ["name", "email"],
+      education: ["institution", "degree", "dates"],
+      experience: ["company", "position", "dates"],
+    };
+    
+    if (requiredFields[section] && requiredFields[section].includes(field) && !value.trim()) {
+      error = "This field is required";
+    }
+    
+    // Email validation
+    if (field === "email" && value && !/\S+@\S+\.\S+/.test(value)) {
+      error = "Please enter a valid email address";
+    }
+    
+    // URL validation
+    const urlFields = ["website", "linkedin", "github", "link"];
+    if (urlFields.includes(field) && value && !/^https?:\/\/.+/.test(value)) {
+      error = "Please enter a valid URL (start with http:// or https://)";
+    }
+    
+    // Date validation (simple check)
+    if (field === "dates" && value && !/^[a-zA-Z0-9\s,-]+$/.test(value)) {
+      error = "Please enter a valid date range";
+    }
+    
+    // GPA validation
+    if (field === "gpa" && value && !/^[0-4]\.\d{1,2}$/.test(value)) {
+      error = "Please enter a valid GPA (e.g., 3.75)";
+    }
+    
+    // Update errors state
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      
+      if (index !== null) {
+        // For array fields (education, experience, etc.)
+        if (!newErrors[section]) newErrors[section] = [];
+        if (!newErrors[section][index]) newErrors[section][index] = {};
+        
+        if (error) {
+          newErrors[section][index][field] = error;
+        } else {
+          delete newErrors[section][index][field];
+          // Clean up empty error objects
+          if (Object.keys(newErrors[section][index]).length === 0) {
+            newErrors[section] = newErrors[section].filter((_, i) => i !== index);
+          }
+        }
+        
+        // Clean up empty arrays
+        if (newErrors[section] && newErrors[section].length === 0) {
+          delete newErrors[section];
+        }
+      } else {
+        // For object fields (personalInfo, technologies)
+        if (!newErrors[section]) newErrors[section] = {};
+        
+        if (error) {
+          newErrors[section][field] = error;
+        } else {
+          delete newErrors[section][field];
+          // Clean up empty objects
+          if (Object.keys(newErrors[section]).length === 0) {
+            delete newErrors[section];
+          }
+        }
+      }
+      
+      return newErrors;
+    });
+    
+    return error === "";
+  };
 
   const handleInputChange = (section, index, field, value) => {
     setFormData((prev) => {
@@ -167,6 +249,81 @@ const GenerateResume = () => {
         [section]: { ...prev[section], [field]: value },
       };
     });
+    
+    // Validate the field
+    validateField(section, field, value, index);
+  };
+
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = {};
+    
+    // Validate personalInfo
+    Object.keys(formData.personalInfo).forEach(field => {
+      if (!validateField("personalInfo", field, formData.personalInfo[field])) {
+        isValid = false;
+        if (!newErrors.personalInfo) newErrors.personalInfo = {};
+        newErrors.personalInfo[field] = "Validation failed";
+      }
+    });
+    
+    // Validate education
+    formData.education.forEach((edu, index) => {
+      Object.keys(edu).forEach(field => {
+        if (!validateField("education", field, edu[field], index)) {
+          isValid = false;
+          if (!newErrors.education) newErrors.education = [];
+          if (!newErrors.education[index]) newErrors.education[index] = {};
+          newErrors.education[index][field] = "Validation failed";
+        }
+      });
+    });
+    
+    // Validate experience
+    formData.experience.forEach((exp, index) => {
+      Object.keys(exp).forEach(field => {
+        if (field === "bullets") {
+          // Validate that at least one bullet point exists and is not empty
+          if (!exp.bullets || exp.bullets.length === 0 || exp.bullets.every(b => !b.trim())) {
+            isValid = false;
+            if (!newErrors.experience) newErrors.experience = [];
+            if (!newErrors.experience[index]) newErrors.experience[index] = {};
+            newErrors.experience[index][field] = "At least one bullet point is required";
+          }
+        } else if (!validateField("experience", field, exp[field], index)) {
+          isValid = false;
+          if (!newErrors.experience) newErrors.experience = [];
+          if (!newErrors.experience[index]) newErrors.experience[index] = {};
+          newErrors.experience[index][field] = "Validation failed";
+        }
+      });
+    });
+    
+    // Validate technologies
+    if (!formData.technologies.languages.trim()) {
+      isValid = false;
+      if (!newErrors.technologies) newErrors.technologies = {};
+      newErrors.technologies.languages = "Please list at least one language";
+    }
+    
+    if (!formData.technologies.tools.trim()) {
+      isValid = false;
+      if (!newErrors.technologies) newErrors.technologies = {};
+      newErrors.technologies.tools = "Please list at least one tool or framework";
+    }
+    
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handlePreviewResume = () => {
+    if (validateForm()) {
+      setShowResume(true);
+    } else {
+      // Scroll to the first error
+      const firstErrorSection = Object.keys(errors)[0];
+      setActiveTab(firstErrorSection);
+    }
   };
 
   const addEntry = (section) => {
@@ -202,6 +359,18 @@ const GenerateResume = () => {
         [section]: prev[section].filter((_, idx) => idx !== index),
       };
     });
+    
+    // Clean up errors for removed entry
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      if (newErrors[section] && newErrors[section][index]) {
+        newErrors[section] = newErrors[section].filter((_, idx) => idx !== index);
+        if (newErrors[section].length === 0) {
+          delete newErrors[section];
+        }
+      }
+      return newErrors;
+    });
   };
 
   const addBullet = (expIndex) => {
@@ -228,27 +397,20 @@ const GenerateResume = () => {
   };
 
   const downloadPdf = async () => {
+    if (!validateForm()) {
+      setShowResume(false);
+      return;
+    }
+    
     if (!resumeRef.current) return;
     
     setIsGeneratingPdf(true);
     try {
-      // Enhanced PDF generation with better error handling
       const canvas = await html2canvas(resumeRef.current, {
         useCORS: true,
-        scale: 2, // Higher resolution for better quality
+        scale: 2,
         logging: false,
         backgroundColor: "#ffffff",
-        onclone: (clonedDoc) => {
-          // Remove any unsupported CSS
-          clonedDoc.querySelectorAll('*').forEach(node => {
-            ['color', 'backgroundColor', 'borderColor'].forEach(prop => {
-              const v = node.style[prop];
-              if (v && v.includes('oklch')) {
-                node.style[prop] = ''; 
-              }
-            });
-          });
-        }
       });
 
       const imgData = canvas.toDataURL('image/png', 1.0);
@@ -256,9 +418,7 @@ const GenerateResume = () => {
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = (canvas.height * pageWidth) / canvas.width;
       
-      // Check if content exceeds jsPDF's height limit (14400pt)
       if (pageHeight > 14400) {
-        // Handle very long resumes by scaling down
         const ratio = 14400 / pageHeight;
         const scaledWidth = pageWidth * ratio;
         const scaledHeight = pageHeight * ratio;
@@ -274,6 +434,26 @@ const GenerateResume = () => {
     } finally {
       setIsGeneratingPdf(false);
     }
+  };
+
+  const getError = (section, field, index = null) => {
+    if (!errors[section]) return null;
+    
+    if (index !== null) {
+      return errors[section][index] && errors[section][index][field];
+    }
+    
+    return errors[section][field];
+  };
+
+  const hasErrors = (section, index = null) => {
+    if (!errors[section]) return false;
+    
+    if (index !== null) {
+      return errors[section][index] && Object.keys(errors[section][index]).length > 0;
+    }
+    
+    return Object.keys(errors[section]).length > 0;
   };
 
   return (
@@ -294,7 +474,7 @@ const GenerateResume = () => {
               </button>
               <button 
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                onClick={() => setShowResume(true)}
+                onClick={handlePreviewResume}
               >
                 Preview Resume
               </button>
@@ -318,10 +498,13 @@ const GenerateResume = () => {
                       activeTab === tab.id 
                         ? "bg-white text-purple-700 shadow-sm font-medium" 
                         : "text-blue-700 hover:bg-blue-100"
-                    }`}
+                    } ${hasErrors(tab.id) ? "ring-2 ring-red-500" : ""}`}
                     onClick={() => setActiveTab(tab.id)}
                   >
                     {tab.label}
+                    {hasErrors(tab.id) && (
+                      <span className="ml-1 text-red-500">●</span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -332,19 +515,27 @@ const GenerateResume = () => {
                     <h3 className="text-xl text-blue-800 font-semibold mb-4">Personal Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {Object.keys(formData.personalInfo).map((field) => (
-                        <div key={field}>
+                        <div key={field} className="relative">
                           <label className="block text-sm font-medium text-blue-700 mb-1">
                             {field.charAt(0).toUpperCase() + field.slice(1)}
+                            {(field === "name" || field === "email") && (
+                              <span className="text-red-500 ml-1">*</span>
+                            )}
                           </label>
                           <input
-                            type="text"
+                            type={field === "email" ? "email" : "text"}
                             placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-                            className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+                            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent ${
+                              getError("personalInfo", field) ? "border-red-500" : "border-blue-200"
+                            }`}
                             value={formData.personalInfo[field]}
                             onChange={(e) =>
                               handleInputChange("personalInfo", null, field, e.target.value)
                             }
                           />
+                          {getError("personalInfo", field) && (
+                            <p className="text-red-500 text-xs mt-1">{getError("personalInfo", field)}</p>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -354,11 +545,13 @@ const GenerateResume = () => {
                 {activeTab === "education" && (
                   <SectionForm
                     title="Education"
+                    section="education"
                     entries={formData.education}
+                    errors={errors.education || []}
                     fields={[
-                      { name: "institution", label: "Institution" },
-                      { name: "degree", label: "Degree" },
-                      { name: "dates", label: "Dates" },
+                      { name: "institution", label: "Institution", required: true },
+                      { name: "degree", label: "Degree", required: true },
+                      { name: "dates", label: "Dates", required: true },
                       { name: "gpa", label: "GPA" },
                       { name: "coursework", label: "Relevant Coursework" }
                     ]}
@@ -367,18 +560,21 @@ const GenerateResume = () => {
                     }
                     onAdd={() => addEntry("education")}
                     onRemove={removeEntry}
+                    getError={getError}
                   />
                 )}
 
                 {activeTab === "experience" && (
                   <SectionForm
                     title="Experience"
+                    section="experience"
                     entries={formData.experience}
+                    errors={errors.experience || []}
                     fields={[
-                      { name: "position", label: "Position" },
-                      { name: "company", label: "Company" },
+                      { name: "position", label: "Position", required: true },
+                      { name: "company", label: "Company", required: true },
                       { name: "location", label: "Location" },
-                      { name: "dates", label: "Dates" }
+                      { name: "dates", label: "Dates", required: true }
                     ]}
                     onChange={(index, field, value) =>
                       handleInputChange("experience", index, field, value)
@@ -388,13 +584,16 @@ const GenerateResume = () => {
                     onAddBullet={addBullet}
                     onRemoveBullet={removeBullet}
                     hasBullets={true}
+                    getError={getError}
                   />
                 )}
 
                 {activeTab === "publications" && (
                   <SectionForm
                     title="Publications"
+                    section="publications"
                     entries={formData.publications}
+                    errors={errors.publications || []}
                     fields={[
                       { name: "title", label: "Title" },
                       { name: "authors", label: "Authors" },
@@ -406,13 +605,16 @@ const GenerateResume = () => {
                     }
                     onAdd={() => addEntry("publications")}
                     onRemove={removeEntry}
+                    getError={getError}
                   />
                 )}
 
                 {activeTab === "projects" && (
                   <SectionForm
                     title="Projects"
+                    section="projects"
                     entries={formData.projects}
+                    errors={errors.projects || []}
                     fields={[
                       { name: "name", label: "Project Name" },
                       { name: "link", label: "Project Link" },
@@ -424,6 +626,7 @@ const GenerateResume = () => {
                     }
                     onAdd={() => addEntry("projects")}
                     onRemove={removeEntry}
+                    getError={getError}
                   />
                 )}
 
@@ -433,11 +636,13 @@ const GenerateResume = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-blue-700 mb-2">
-                          Languages
+                          Languages <span className="text-red-500">*</span>
                         </label>
                         <textarea
                           placeholder="List programming languages you know (e.g., JavaScript, Python, Java)"
-                          className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent h-32"
+                          className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent h-32 ${
+                            getError("technologies", "languages") ? "border-red-500" : "border-blue-200"
+                          }`}
                           value={formData.technologies.languages}
                           onChange={(e) =>
                             handleInputChange(
@@ -448,14 +653,19 @@ const GenerateResume = () => {
                             )
                           }
                         />
+                        {getError("technologies", "languages") && (
+                          <p className="text-red-500 text-xs mt-1">{getError("technologies", "languages")}</p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-blue-700 mb-2">
-                          Tools & Frameworks
+                          Tools & Frameworks <span className="text-red-500">*</span>
                         </label>
                         <textarea
                           placeholder="List tools, frameworks, and technologies (e.g., React, Node.js, Git)"
-                          className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent h-32"
+                          className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent h-32 ${
+                            getError("technologies", "tools") ? "border-red-500" : "border-blue-200"
+                          }`}
                           value={formData.technologies.tools}
                           onChange={(e) =>
                             handleInputChange(
@@ -466,6 +676,9 @@ const GenerateResume = () => {
                             )
                           }
                         />
+                        {getError("technologies", "tools") && (
+                          <p className="text-red-500 text-xs mt-1">{getError("technologies", "tools")}</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -517,14 +730,17 @@ const GenerateResume = () => {
 
 const SectionForm = ({
   title,
+  section,
   entries,
+  errors,
   fields,
   onChange,
   onAdd,
   onRemove,
   onAddBullet,
   onRemoveBullet,
-  hasBullets = false
+  hasBullets = false,
+  getError
 }) => {
   return (
     <div className="bg-white rounded-lg border border-blue-100 p-6">
@@ -532,7 +748,7 @@ const SectionForm = ({
         <h3 className="text-xl text-blue-800 font-semibold">{title}</h3>
         <button
           type="button"
-          onClick={() => onAdd(title.toLowerCase())}
+          onClick={() => onAdd(section.toLowerCase())}
           className="bg-purple-100 text-purple-700 px-4 py-2 rounded-lg hover:bg-purple-200 transition-colors flex items-center"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -547,7 +763,7 @@ const SectionForm = ({
           {entries.length > 1 && (
             <button
               type="button"
-              onClick={() => onRemove(title.toLowerCase(), index)}
+              onClick={() => onRemove(section.toLowerCase(), index)}
               className="absolute top-3 right-3 text-red-500 hover:text-red-700"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -558,24 +774,32 @@ const SectionForm = ({
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             {fields.map((field) => (
-              <div key={field.name}>
+              <div key={field.name} className="relative">
                 <label className="block text-sm font-medium text-blue-700 mb-1">
                   {field.label}
+                  {field.required && <span className="text-red-500 ml-1">*</span>}
                 </label>
                 <input
                   type="text"
                   placeholder={field.label}
-                  className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent ${
+                    getError(section, field.name, index) ? "border-red-500" : "border-blue-200"
+                  }`}
                   value={entry[field.name]}
                   onChange={(e) => onChange(index, field.name, e.target.value)}
                 />
+                {getError(section, field.name, index) && (
+                  <p className="text-red-500 text-xs mt-1">{getError(section, field.name, index)}</p>
+                )}
               </div>
             ))}
           </div>
 
           {hasBullets && (
             <div className="ml-4 mt-4">
-              <label className="block text-sm font-medium text-blue-700 mb-2">Bullet Points</label>
+              <label className="block text-sm font-medium text-blue-700 mb-2">
+                Bullet Points <span className="text-red-500">*</span>
+              </label>
               {entry.bullets.map((bullet, bulletIndex) => (
                 <div key={bulletIndex} className="flex items-center mb-2">
                   <span className="text-blue-500 mr-2">•</span>
@@ -604,6 +828,9 @@ const SectionForm = ({
                   )}
                 </div>
               ))}
+              {getError(section, "bullets", index) && (
+                <p className="text-red-500 text-xs mt-1">{getError(section, "bullets", index)}</p>
+              )}
               <button
                 type="button"
                 onClick={() => onAddBullet(index)}
